@@ -1,13 +1,9 @@
-
 const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/authController');
+const { register, login, logout } = require('../controllers/authController');
 
-// Rutas públicas de autenticación
-router.post('/register', authController.register);
-router.post('/login', authController.login);
-
-// Ruta de cierre de sesión
-router.post('/logout', authController.logout);
+router.post('/register', register);
+router.post('/login', login);
+router.post('/logout', logout);
 
 module.exports = router;
