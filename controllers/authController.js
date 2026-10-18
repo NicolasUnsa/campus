@@ -36,3 +36,46 @@ exports.register = async (req, res) => {
         }
     });
 };
+
+// ===== 16
+exports.login = async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({
+            status: 'fail',
+            message: 'Email y password son obligatorios'
+        });
+    }
+
+    // Buscar si el usuario existe en el arreglo
+    const user = users.find(user => user.email === email);
+    if (!user) {
+        return res.status(401).json({
+            status: 'fail',
+            message: 'Credenciales inválidas'
+        });
+    }
+
+    // ===== 17
+    const passwordCorrect = await bcrypt.compare(password, user.password);
+
+    if (!passwordCorrect) {
+        return res.status(401).json({
+            status: 'fail',
+            message: 'Credenciales inválidas'
+        });
+    }
+
+    // ===== 18
+    req.session.userId = user.id;
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Login exitoso',
+        data: {
+            id: user.id,
+            email: user.email
+        }
+    });
+};
