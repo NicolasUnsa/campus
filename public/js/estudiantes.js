@@ -1,8 +1,8 @@
 const formulario = document.getElementById('formEstudiante');
-const tabla = document.getElementById('tablaEstudiantes');
-const mensajeEstudiantes = document.getElementById('mensaje');
-const btnGuardar = document.getElementById('btnGuardar');
-const btnCancelar = document.getElementById('btnCancelar');
+const tabla = document.getElementById('studentTableBody');
+const mensajeEstudiantes = document.getElementById('message');
+const btnGuardar = document.getElementById('saveButton');
+const btnCancelar = document.getElementById('cancelButton');
 
 function mensaje(texto, tipo = '') {
     mensajeEstudiantes.textContent = texto;
@@ -39,7 +39,7 @@ async function cargarEstudiantes() {
         if (estudiantes.length === 0) {
             const fila = document.createElement('tr');
             const celda = document.createElement('td');
-            celda.colSpan = 5;
+            celda.colSpan = 6;
             celda.textContent = 'No hay estudiantes registrados.';
             fila.append(celda);
             tabla.append(fila);
@@ -47,12 +47,20 @@ async function cargarEstudiantes() {
         }
         estudiantes.forEach(estudiante => {
             const fila = document.createElement('tr');
-            [estudiante.id, estudiante.nombre,
-             estudiante.email, estudiante.carrera].forEach(valor => {
+            
+            // Columnas según tu HTML: ID, Nombre, Email, Carrera, Creado
+            [
+                estudiante.id, 
+                estudiante.nombre,
+                estudiante.email, 
+                estudiante.carrera,
+                estudiante.creado_en ? new Date(estudiante.creado_en).toLocaleString() : ''
+            ].forEach(valor => {
                 const celda = document.createElement('td');
                 celda.textContent = String(valor ?? '');
                 fila.append(celda);
             });
+
             const acciones = document.createElement('td');
             acciones.className = 'acciones';
             
@@ -82,19 +90,21 @@ async function cargarEstudiantes() {
 }
 
 function prepararEdicion(estudiante) {
-    document.getElementById('id').value = estudiante.id;
+    document.getElementById('studentId').value = estudiante.id;
     document.getElementById('nombre').value = estudiante.nombre;
     document.getElementById('email').value = estudiante.email;
     document.getElementById('carrera').value = estudiante.carrera;
-    btnGuardar.textContent = 'Guardar cambios';
+    btnGuardar.textContent = 'Actualizar estudiante';
+    btnCancelar.style.display = 'inline-block';
     btnCancelar.hidden = false;
     formulario.scrollIntoView({ behavior: 'smooth' });
 }
 
 function limpiarFormulario() {
     formulario.reset();
-    document.getElementById('id').value = '';
+    document.getElementById('studentId').value = '';
     btnGuardar.textContent = 'Registrar estudiante';
+    btnCancelar.style.display = 'none';
     btnCancelar.hidden = true;
 }
 
@@ -102,7 +112,7 @@ btnCancelar.addEventListener('click', limpiarFormulario);
 
 formulario.addEventListener('submit', async event => {
     event.preventDefault();
-    const id = document.getElementById('id').value;
+    const id = document.getElementById('studentId').value;
     const estudiante = {
         nombre: document.getElementById('nombre').value.trim(),
         email: document.getElementById('email').value.trim(),
@@ -153,8 +163,9 @@ async function eliminarEstudiante(id) {
     }
 }
 
-document.getElementById('btnCerrarSesion')
-    .addEventListener('click', async () => {
+const btnCerrar = document.getElementById('btnCerrarSesion');
+if (btnCerrar) {
+    btnCerrar.addEventListener('click', async () => {
         try {
             await solicitar('/logout', { method: 'POST' });
             window.location.replace('/');
@@ -162,5 +173,11 @@ document.getElementById('btnCerrarSesion')
             mensaje(error.message, 'mensaje-error');
         }
     });
+}
+
+const btnRefresh = document.getElementById('refreshButton');
+if (btnRefresh) {
+    btnRefresh.addEventListener('click', cargarEstudiantes);
+}
 
 cargarEstudiantes();
