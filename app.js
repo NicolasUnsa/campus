@@ -15,6 +15,9 @@ const SESSION_SECRET = process.env.SESSION_SECRET;
 // Middleware para procesar body en JSON
 app.use(express.json());
 
+app.use(express.static('public'));
+
+
 // Configuración de Sesiones con express-session
 app.use(
     session({
