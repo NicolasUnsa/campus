@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudiantes | Gestión Académica</title>
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script src="/js/estudiantes.js" defer></script>
+</head>
+<body>
+    <header class="encabezado">
+        <div class="contenedor">
+            <h1>C.A.M.P.U.S</h1>
+            <p>Administración de registros académicos</p>
+        </div>
+    </header>
+    <main class="contenedor">
+        <section class="tarjeta">
+            <div class="barra-superior" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 id="formTitle">Registro de estudiantes</h2>
+                <button id="btnCerrarSesion" class="boton boton-secundario" type="button">
+                    Cerrar sesión
+                </button>
+            </div>
+            <form id="formEstudiante">
+                <input type="hidden" id="studentId">
+                <div class="campo">
+                    <label for="nombre">Nombre completo</label>
+                    <input type="text" id="nombre" maxlength="100" required>
+                </div>
+                <div class="campo">
+                    <label for="email">Correo electrónico</label>
+                    <input type="email" id="email" maxlength="100" required>
+                </div>
+                <div class="campo">
+                    <label for="carrera">Carrera profesional</label>
+                    <input type="text" id="carrera" maxlength="80" required>
+                </div>
+                <button type="submit" id="saveButton" class="boton boton-principal">
+                    Registrar estudiante
+                </button>
+                <button type="button" id="cancelButton" class="boton boton-secundario" style="display:none;" hidden>
+                    Cancelar edición
+                </button>
+            </form>
+            <p id="message" class="mensaje" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="tarjeta">
+            <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>Estudiantes registrados</h2>
+                <button type="button" id="refreshButton" class="boton boton-secundario">
+                    Actualizar
+                </button>
+            </div>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Carrera</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody">
+                        <tr>
+                            <td colspan="5">Cargando registros...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <footer class="pie">
+        <p>Introducción al Desarrollo Web · 2026</p>
+    </footer>
+</body>
+</html>
