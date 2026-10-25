@@ -4,6 +4,10 @@ const session = require('express-session');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 
+// ruta del modulo estudiante
+const estudianteRoutes = require('./routes/estudianteRoutes');
+
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SESSION_SECRET = process.env.SESSION_SECRET;
@@ -32,6 +36,7 @@ app.use((req, res, next) => {
 // Definición de las rutas
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
+app.use('/api/estudiantes', estudianteRoutes);
 
 // Iniciar servidor
 app.listen(PORT, () => {
