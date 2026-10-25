@@ -27,7 +27,10 @@ async function cargarEstudiantes() {
             throw new Error('Error al obtener estudiantes');
         }
         const result = await response.json();
-        mostrarEstudiantes(result.data);
+        
+        // Compatible tanto si devuelve un arreglo directo como si viene en { data: [...] }
+        const estudiantes = Array.isArray(result) ? result : (result.data || []);
+        mostrarEstudiantes(estudiantes);
     } catch (error) {
         console.error(error);
         mostrarMensaje(error.message, 'error');
@@ -37,6 +40,12 @@ async function cargarEstudiantes() {
 // MOSTRAR TABLA
 function mostrarEstudiantes(estudiantes) {
     tableBody.innerHTML = '';
+    
+    if (!estudiantes || estudiantes.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center;">No hay estudiantes registrados.</td></tr>`;
+        return;
+    }
+
     estudiantes.forEach(estudiante => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -44,7 +53,7 @@ function mostrarEstudiantes(estudiantes) {
             <td>${estudiante.nombre}</td>
             <td>${estudiante.email}</td>
             <td>${estudiante.carrera}</td>
-            <td>${new Date(estudiante.creado_en).toLocaleString()}</td>
+            <td>${estudiante.creado_en ? new Date(estudiante.creado_en).toLocaleString() : ''}</td>
             <td>
                 <button onclick="editarEstudiante(${estudiante.id})">
                     Editar
@@ -85,9 +94,9 @@ form.addEventListener('submit', async (event) => {
         }
         const result = await response.json();
         if (!response.ok) {
-            throw new Error(result.message || 'Error en la operación');
+            throw new Error(result.message || result.error || 'Error en la operación');
         }
-        mostrarMensaje(result.message, 'success');
+        mostrarMensaje(result.message || 'Operación exitosa', 'success');
         limpiarFormulario();
         await cargarEstudiantes();
     } catch (error) {
@@ -102,16 +111,18 @@ async function editarEstudiante(id) {
         const response = await fetch(`${API_URL}/${id}`);
         const result = await response.json();
         if (!response.ok) {
-            throw new Error(result.message);
+            throw new Error(result.message || result.error);
         }
-        const estudiante = result.data;
+        // Soporta si el resultado viene directo o dentro de .data
+        const estudiante = result.id ? result : result.data;
+        
         studentId.value = estudiante.id;
         nombre.value = estudiante.nombre;
         email.value = estudiante.email;
         carrera.value = estudiante.carrera;
         formTitle.textContent = 'Editar estudiante';
         saveButton.textContent = 'Actualizar estudiante';
-        cancelButton.style.display = 'block';
+        cancelButton.style.display = 'inline-block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
         console.error(error);
@@ -131,9 +142,9 @@ async function eliminarEstudiante(id) {
         });
         const result = await response.json();
         if (!response.ok) {
-            throw new Error(result.message);
+            throw new Error(result.message || result.error);
         }
-        mostrarMensaje(result.message, 'success');
+        mostrarMensaje(result.message || 'Estudiante eliminado', 'success');
         await cargarEstudiantes();
     } catch (error) {
         console.error(error);
