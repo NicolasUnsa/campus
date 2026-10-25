@@ -1,47 +1,351 @@
-require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-
-// ruta del modulo estudiante
-const estudianteRoutes = require('./routes/estudianteRoutes');
-
+const bcrypt = require('bcryptjs');
+const path = require('path');
+require('dotenv').config();
+const pool = require('./db');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const SESSION_SECRET = process.env.SESSION_SECRET;
+const PORT = Number(process.env.PORT) || 3000;
 
-// Middleware para procesar body en JSON
+// --------------------------------------------------
+// 1. CONFIGURACIÓN BÁSICA
+// --------------------------------------------------
+if (!process.env.SESSION_SECRET) {
+    throw new Error('Falta SESSION_SECRET en el archivo .env');
+}
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use(express.static('public'));
+app.use(session({
+    name: 'gestion.sid',
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 30 * 60 * 1000
+    }
+}));
 
+// Publicamos únicamente los recursos estáticos.
+app.use('/css', express.static(
+    path.join(__dirname, 'public', 'css')
+));
+app.use('/js', express.static(
+    path.join(__dirname, 'public', 'js')
+));
 
-// Configuración de Sesiones con express-session
-app.use(
-    session({
-        secret: SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            httpOnly: true // Opcion de seguridad para proteger contra lecturas por JS en el cliente
+// --------------------------------------------------
+// 2. MIDDLEWARE DE AUTENTICACIÓN
+// --------------------------------------------------
+function requiereAutenticacion(req, res, next) {
+    if (req.session && req.session.usuario) {
+        return next();
+    }
+    return res.status(401).json({
+        message: 'Debe iniciar sesión para continuar.'
+    });
+}
+
+// --------------------------------------------------
+// 3. PÁGINAS WEB
+// --------------------------------------------------
+app.get('/', (req, res) => {
+    res.sendFile(path.join(
+        __dirname, 'public', 'index.html'
+    ));
+});
+
+app.get('/estudiantes.html', requiereAutenticacion, (req, res) => {
+    res.sendFile(path.join(
+        __dirname, 'public', 'estudiantes.html'
+    ));
+});
+
+// --------------------------------------------------
+// 4. LOGIN (POST /login)
+// --------------------------------------------------
+app.post('/login', async (req, res, next) => {
+    try {
+        const usuario = String(req.body.usuario || '').trim();
+        const password = req.body.password;
+
+        if (
+            !usuario ||
+            typeof password !== 'string' ||
+            !password ||
+            usuario.length > 100 ||
+            password.length > 72
+        ) {
+            return res.status(400).json({
+                message: 'Ingresa un usuario y contraseña válidos.'
+            });
         }
-    })
-);
 
-// Logger en consola para peticiones entrantes
-app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    next();
+        const resultado = await pool.query(
+            `SELECT id, usuario, password_hash
+             FROM usuarios
+             WHERE LOWER(usuario) = LOWER($1)
+               AND activo = TRUE`,
+            [usuario]
+        );
+
+        if (resultado.rows.length === 0) {
+            return res.status(401).json({
+                message: 'Credenciales incorrectas.'
+            });
+        }
+
+        const cuenta = resultado.rows[0];
+        const coincide = await bcrypt.compare(
+            password,
+            cuenta.password_hash
+        );
+
+        if (!coincide) {
+            return res.status(401).json({
+                message: 'Credenciales incorrectas.'
+            });
+        }
+
+        req.session.regenerate((error) => {
+            if (error) return next(error);
+            req.session.usuario = {
+                id: cuenta.id,
+                usuario: cuenta.usuario
+            };
+            req.session.save((errorGuardar) => {
+                if (errorGuardar) return next(errorGuardar);
+                return res.status(200).json({
+                    message: 'Inicio de sesión correcto.',
+                    usuario: {
+                        id: cuenta.id,
+                        usuario: cuenta.usuario
+                    }
+                });
+            });
+        });
+    } catch (error) {
+        next(error);
+    }
 });
 
-// Definición de las rutas
-app.use('/api/auth', authRoutes);
-app.use('/api', userRoutes);
-app.use('/api/estudiantes', estudianteRoutes);
-
-// Iniciar servidor
-app.listen(PORT, () => {
-    console.log(`Servidor Express ejecutándose en el puerto ${PORT}`);
+// --------------------------------------------------
+// 5. VERIFICAR SESIÓN (GET /api/auth/me)
+// --------------------------------------------------
+app.get('/api/auth/me', requiereAutenticacion, (req, res) => {
+    res.json({
+        autenticado: true,
+        usuario: req.session.usuario
+    });
 });
+
+// --------------------------------------------------
+// 6. LOGOUT (POST /logout)
+// --------------------------------------------------
+app.post('/logout', (req, res, next) => {
+    if (!req.session) {
+        return res.status(200).json({
+            message: 'Sesión cerrada.'
+        });
+    }
+    req.session.destroy((error) => {
+        if (error) return next(error);
+        res.clearCookie('gestion.sid', {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            path: '/'
+        });
+        return res.status(200).json({
+            message: 'Sesión cerrada correctamente.'
+        });
+    });
+});
+
+// --------------------------------------------------
+// 7. CRUD DE ESTUDIANTES (Protegidos)
+// --------------------------------------------------
+
+// GET /api/estudiantes
+app.get('/api/estudiantes', requiereAutenticacion, async (req, res, next) => {
+    try {
+        const resultado = await pool.query(
+            `SELECT id, nombre, email, carrera, creado_en
+             FROM estudiantes
+             ORDER BY id`
+        );
+        res.json(resultado.rows);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// GET /api/estudiantes/:id
+app.get('/api/estudiantes/:id', requiereAutenticacion, async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            return res.status(400).json({
+                message: 'El ID debe ser un entero positivo.'
+            });
+        }
+        const resultado = await pool.query(
+            `SELECT id, nombre, email, carrera, creado_en
+             FROM estudiantes
+             WHERE id = $1`,
+            [id]
+        );
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                message: 'Estudiante no encontrado.'
+            });
+        }
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// POST /api/estudiantes
+app.post('/api/estudiantes', requiereAutenticacion, async (req, res, next) => {
+    try {
+        const { nombre, email, carrera } = req.body;
+        if (
+            typeof nombre !== 'string' ||
+            typeof email !== 'string' ||
+            typeof carrera !== 'string' ||
+            !nombre.trim() ||
+            !email.trim() ||
+            !carrera.trim() ||
+            nombre.trim().length > 100 ||
+            email.trim().length > 100 ||
+            carrera.trim().length > 80
+        ) {
+            return res.status(400).json({
+                message: 'Verifica los campos obligatorios y sus longitudes.'
+            });
+        }
+        const resultado = await pool.query(
+            `INSERT INTO estudiantes (nombre, email, carrera)
+             VALUES ($1, $2, $3)
+             RETURNING id, nombre, email, carrera, creado_en`,
+            [nombre.trim(), email.trim(), carrera.trim()]
+        );
+        res.status(201).json(resultado.rows[0]);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// PUT /api/estudiantes/:id
+app.put('/api/estudiantes/:id', requiereAutenticacion, async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        const { nombre, email, carrera } = req.body;
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            return res.status(400).json({
+                message: 'El ID debe ser un entero positivo.'
+            });
+        }
+        if (
+            typeof nombre !== 'string' ||
+            typeof email !== 'string' ||
+            typeof carrera !== 'string' ||
+            !nombre.trim() ||
+            !email.trim() ||
+            !carrera.trim() ||
+            nombre.trim().length > 100 ||
+            email.trim().length > 100 ||
+            carrera.trim().length > 80
+        ) {
+            return res.status(400).json({
+                message: 'Verifica los campos obligatorios y sus longitudes.'
+            });
+        }
+        const resultado = await pool.query(
+            `UPDATE estudiantes
+             SET nombre = $1, email = $2, carrera = $3
+             WHERE id = $4
+             RETURNING id, nombre, email, carrera, creado_en`,
+            [nombre.trim(), email.trim(), carrera.trim(), id]
+        );
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                message: 'Estudiante no encontrado.'
+            });
+        }
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// DELETE /api/estudiantes/:id
+app.delete('/api/estudiantes/:id', requiereAutenticacion, async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            return res.status(400).json({
+                message: 'El ID debe ser un entero positivo.'
+            });
+        }
+        const resultado = await pool.query(
+            `DELETE FROM estudiantes
+             WHERE id = $1
+             RETURNING id, nombre, email, carrera`,
+            [id]
+        );
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                message: 'Estudiante no encontrado.'
+            });
+        }
+        res.json({
+            message: 'Estudiante eliminado correctamente.',
+            estudiante: resultado.rows[0]
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// --------------------------------------------------
+// 8. MANEJO CENTRALIZADO DE ERRORES
+// --------------------------------------------------
+app.use((error, req, res, next) => {
+    console.error(error);
+    if (res.headersSent) {
+        return next(error);
+    }
+    if (error.code === '23505') {
+        return res.status(409).json({
+            message: 'Ya existe un registro con ese usuario o correo.'
+        });
+    }
+    return res.status(500).json({
+        message: 'Ocurrió un error interno del servidor.'
+    });
+});
+
+// --------------------------------------------------
+// 9. INICIO DEL SERVIDOR
+// --------------------------------------------------
+async function iniciarServidor() {
+    try {
+        await pool.query('SELECT 1');
+        app.listen(PORT, () => {
+            console.log(`Servidor: http://localhost:${PORT}`);
+            console.log('Conexión a PostgreSQL verificada.');
+        });
+    } catch (error) {
+        console.error('No se pudo conectar a PostgreSQL:', error.message);
+        process.exit(1);
+    }
+}
+
+iniciarServidor();
