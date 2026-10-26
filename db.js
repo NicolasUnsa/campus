@@ -1,12 +1,41 @@
-// Conexión con PostgreSQL
-const { Pool } = require('pg');
-const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT
+const readline = require('readline');
+const bcrypt = require('bcryptjs');
+const pool = require('./db');
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
 });
-module.exports = {
-    query: (text, params) => pool.query(text, params)
-};
+
+function preguntar(texto) {
+    return new Promise(resolve => rl.question(texto, resolve));
+}
+
+async function main() {
+    try {
+        const usuario = (await preguntar('Usuario: ')).trim();
+        const password = await preguntar('Contraseña: ');
+
+        if (!usuario || usuario.length > 100 || !password || Buffer.byteLength(password, 'utf8') > 72) {
+            throw new Error('Usuario o contraseña inválidos.');
+        }
+
+        const hash = await bcrypt.hash(password, 12);
+
+        await pool.query(
+            `INSERT INTO usuarios (usuario, password_hash)
+             VALUES ($1, $2)`,
+            [usuario, hash]
+        );
+
+        console.log('Usuario creado correctamente.');
+    } catch (error) {
+        console.error('No se pudo crear el usuario:', error.message);
+    } finally {
+        rl.close();
+        // Como db.js exporta el pool directamente, cerramos las conexiones con pool.end()
+        await pool.end();
+    }
+}
+
+main();
