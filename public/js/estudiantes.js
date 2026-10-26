@@ -1,12 +1,14 @@
 const formulario = document.getElementById('formEstudiante');
-const tabla = document.getElementById('studentTableBody');
-const mensajeEstudiantes = document.getElementById('message');
-const btnGuardar = document.getElementById('saveButton');
-const btnCancelar = document.getElementById('cancelButton');
+const tabla = document.getElementById('tablaEstudiantes');
+const mensajeEstudiantes = document.getElementById('mensaje');
+const btnGuardar = document.getElementById('btnGuardar');
+const btnCancelar = document.getElementById('btnCancelar');
 
 function mensaje(texto, tipo = '') {
-    mensajeEstudiantes.textContent = texto;
-    mensajeEstudiantes.className = `mensaje ${tipo}`;
+    if (mensajeEstudiantes) {
+        mensajeEstudiantes.textContent = texto;
+        mensajeEstudiantes.className = `mensaje ${tipo}`;
+    }
 }
 
 async function solicitar(url, opciones = {}) {
@@ -35,11 +37,12 @@ async function solicitar(url, opciones = {}) {
 async function cargarEstudiantes() {
     try {
         const estudiantes = await solicitar('/api/estudiantes');
+        if (!tabla) return;
         tabla.replaceChildren();
         if (estudiantes.length === 0) {
             const fila = document.createElement('tr');
             const celda = document.createElement('td');
-            celda.colSpan = 6;
+            celda.colSpan = 5;
             celda.textContent = 'No hay estudiantes registrados.';
             fila.append(celda);
             tabla.append(fila);
@@ -48,13 +51,11 @@ async function cargarEstudiantes() {
         estudiantes.forEach(estudiante => {
             const fila = document.createElement('tr');
             
-            // Columnas según tu HTML: ID, Nombre, Email, Carrera, Creado
             [
                 estudiante.id, 
                 estudiante.nombre,
                 estudiante.email, 
-                estudiante.carrera,
-                estudiante.creado_en ? new Date(estudiante.creado_en).toLocaleString() : ''
+                estudiante.carrera
             ].forEach(valor => {
                 const celda = document.createElement('td');
                 celda.textContent = String(valor ?? '');
@@ -90,65 +91,67 @@ async function cargarEstudiantes() {
 }
 
 function prepararEdicion(estudiante) {
-    document.getElementById('studentId').value = estudiante.id;
+    document.getElementById('id').value = estudiante.id;
     document.getElementById('nombre').value = estudiante.nombre;
     document.getElementById('email').value = estudiante.email;
     document.getElementById('carrera').value = estudiante.carrera;
-    btnGuardar.textContent = 'Actualizar estudiante';
-    btnCancelar.style.display = 'inline-block';
-    btnCancelar.hidden = false;
-    formulario.scrollIntoView({ behavior: 'smooth' });
+    if (btnGuardar) btnGuardar.textContent = 'Actualizar estudiante';
+    if (btnCancelar) {
+        btnCancelar.style.display = 'inline-block';
+        btnCancelar.hidden = false;
+    }
+    if (formulario) formulario.scrollIntoView({ behavior: 'smooth' });
 }
 
 function limpiarFormulario() {
-    formulario.reset();
-    document.getElementById('studentId').value = '';
-    btnGuardar.textContent = 'Registrar estudiante';
-    btnCancelar.style.display = 'none';
-    btnCancelar.hidden = true;
+    if (formulario) formulario.reset();
+    document.getElementById('id').value = '';
+    if (btnGuardar) btnGuardar.textContent = 'Registrar estudiante';
+    if (btnCancelar) {
+        btnCancelar.style.display = 'none';
+        btnCancelar.hidden = true;
+    }
 }
 
-btnCancelar.addEventListener('click', limpiarFormulario);
+if (formulario) {
+    formulario.addEventListener('submit', async event => {
+        event.preventDefault();
+        const id = document.getElementById('id').value;
+        const estudiante = {
+            nombre: document.getElementById('nombre').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            carrera: document.getElementById('carrera').value.trim()
+        };
 
-formulario.addEventListener('submit', async event => {
-    event.preventDefault();
-    const id = document.getElementById('studentId').value;
-    const estudiante = {
-        nombre: document.getElementById('nombre').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        carrera: document.getElementById('carrera').value.trim()
-    };
+        if (!estudiante.nombre || !estudiante.email || !estudiante.carrera) {
+            mensaje('Todos los campos son obligatorios.', 'mensaje-error');
+            return;
+        }
 
-    if (!estudiante.nombre || !estudiante.email ||
-        !estudiante.carrera) {
-        mensaje('Todos los campos son obligatorios.', 'mensaje-error');
-        return;
-    }
+        const editando = Boolean(id);
+        if (btnGuardar) btnGuardar.disabled = true;
 
-    const editando = Boolean(id);
-    btnGuardar.disabled = true;
-
-    try {
-        await solicitar(
-            editando ? `/api/estudiantes/${id}` : '/api/estudiantes',
-            {
-                method: editando ? 'PUT' : 'POST',
-                body: JSON.stringify(estudiante)
-            }
-        );
-        mensaje(
-            editando ? 'Estudiante actualizado.' :
-                'Estudiante registrado.',
-            'mensaje-exito'
-        );
-        limpiarFormulario();
-        await cargarEstudiantes();
-    } catch (error) {
-        mensaje(error.message, 'mensaje-error');
-    } finally {
-        btnGuardar.disabled = false;
-    }
-});
+        try {
+            await solicitar(
+                editando ? `/api/estudiantes/${id}` : '/api/estudiantes',
+                {
+                    method: editando ? 'PUT' : 'POST',
+                    body: JSON.stringify(estudiante)
+                }
+            );
+            mensaje(
+                editando ? 'Estudiante actualizado.' : 'Estudiante registrado.',
+                'mensaje-exito'
+            );
+            limpiarFormulario();
+            await cargarEstudiantes();
+        } catch (error) {
+            mensaje(error.message, 'mensaje-error');
+        } finally {
+            if (btnGuardar) btnGuardar.disabled = false;
+        }
+    });
+}
 
 async function eliminarEstudiante(id) {
     if (!confirm('¿Desea eliminar este estudiante?')) return;

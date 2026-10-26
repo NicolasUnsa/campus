@@ -1,77 +1,74 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Estudiantes - Panel</title>
-    <link rel="stylesheet" href="/css/estilos.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estudiantes | Gestión Académica</title>
+<link rel="stylesheet" href="/css/estilos.css">
+<script src="/js/estudiantes.js" defer></script>
 </head>
 <body>
-    <header class="header">
-        <h1>Panel de Gestión de Estudiantes</h1>
-        <button id="btnCerrarSesion" class="boton boton-peligro" type="button">Cerrar Sesión</button>
-    </header>
-
-    <main class="container">
-        <!-- Sección de Alertas / Mensajes -->
-        <div id="message" class="mensaje" role="alert"></div>
-
-        <!-- Formulario de Registro / Edición -->
-        <section class="form-section">
-            <h2 id="formTitle">Registrar Estudiante</h2>
-            <form id="formEstudiante">
-                <input type="hidden" id="studentId">
-                
-                <div class="form-group">
-                    <label for="nombre">Nombre:</label>
-                    <input type="text" id="nombre" required placeholder="Ingrese el nombre completo">
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Correo Electrónico:</label>
-                    <input type="email" id="email" required placeholder="correo@ejemplo.com">
-                </div>
-
-                <div class="form-group">
-                    <label for="carrera">Carrera:</label>
-                    <input type="text" id="carrera" required placeholder="Ej. Ingeniería de Sistemas">
-                </div>
-
-                <div class="form-buttons">
-                    <button type="submit" id="saveButton" class="boton boton-primario">Registrar estudiante</button>
-                    <button type="button" id="cancelButton" class="boton boton-secundario" style="display: none;" hidden>Cancelar</button>
-                </div>
-            </form>
-        </section>
-
-        <!-- Tabla de Listado -->
-        <section class="table-section">
-            <div class="table-header">
-                <h2>Lista de Estudiantes</h2>
-                <button id="refreshButton" class="boton boton-secundario" type="button">Actualizar Lista</button>
-            </div>
-            
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Email</th>
-                            <th>Carrera</th>
-                            <th>Registrado En</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="studentTableBody">
-                        <!-- Los datos se cargan dinámicamente mediante JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </main>
-
-    <!-- Script principal del CRUD -->
-    <script src="/js/estudiantes.js" defer></script>
+<header class="encabezado">
+<div class="contenedor">
+<h1>Gestión de Estudiantes</h1>
+<p>Administración de registros académicos</p>
+</div>
+</header>
+<main class="contenedor">
+<section class="tarjeta">
+<div class="barra-superior">
+<h2>Registro de estudiantes</h2>
+<button id="btnCerrarSesion" class="boton boton-secundario">
+Cerrar sesión
+</button>
+</div>
+<form id="formEstudiante">
+<input type="hidden" id="id">
+<div class="campo">
+<label for="nombre">Nombre completo</label>
+<input id="nombre" maxlength="100" required>
+</div>
+<div class="campo">
+<label for="email">Correo electrónico</label>
+<input id="email" type="email" maxlength="100" required>
+</div>
+<div class="campo">
+<label for="carrera">Carrera profesional</label>
+<input id="carrera" maxlength="80" required>
+</div>
+<button type="submit" id="btnGuardar" class="boton boton-principal">
+Registrar estudiante
+</button>
+<button type="button" id="btnCancelar" class="boton boton-secundario" hidden>
+Cancelar edición
+</button>
+</form>
+<p id="mensaje" class="mensaje" role="status" aria-live="polite"></p>
+</section>
+<section class="tarjeta">
+<h2>Estudiantes registrados</h2>
+<div class="tabla-contenedor">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Correo</th>
+<th>Carrera</th>
+<th>Acciones</th>
+</tr>
+</thead>
+<tbody id="tablaEstudiantes">
+<tr>
+<td colspan="5">Cargando registros...</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+<footer class="pie">
+<p>Introducción al Desarrollo Web · 2026</p>
+</footer>
 </body>
 </html>

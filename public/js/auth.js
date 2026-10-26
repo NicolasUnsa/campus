@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const formLogin = document.getElementById('formLogin');
-    const mensajeLogin = document.getElementById('mensaje') || document.getElementById('message');
+    const mensajeLogin = document.getElementById('mensaje');
 
     function mostrarMensaje(texto, tipo = '') {
         if (mensajeLogin) {
@@ -13,21 +13,30 @@ document.addEventListener('DOMContentLoaded', () => {
         formLogin.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
+            const usuarioInput = document.getElementById('usuario');
+            const passwordInput = document.getElementById('password');
 
-            if (!email || !password) {
+            if (!usuarioInput || !passwordInput) {
+                mostrarMensaje('Error en los campos del formulario.', 'mensaje-error');
+                return;
+            }
+
+            const usuario = usuarioInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!usuario || !password) {
                 mostrarMensaje('Por favor, complete todos los campos.', 'mensaje-error');
                 return;
             }
 
             try {
+                // CORREGIDO: Apunta directamente a '/login' según tus rutas de authRoutes.js
                 const response = await fetch('/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ email, password }),
+                    body: JSON.stringify({ usuario, password }),
                     credentials: 'same-origin'
                 });
 
