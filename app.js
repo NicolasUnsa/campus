@@ -5,6 +5,7 @@ const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 require('dotenv').config();
+const corsConfig = require('./middleware/corsConfig');
 const pool = require('./db');
 const validar = require('./middleware/validar');
 const {
@@ -32,6 +33,9 @@ const COOKIE_ULTIMO_USUARIO = {
 if (!process.env.SESSION_SECRET) {
     throw new Error('Falta SESSION_SECRET en el archivo .env');
 }
+
+// permite quien puede acceder a nuestra api
+app.use(corsConfig);
 
 // Comprime las respuestas (JSON, HTML, CSS, JS) con gzip/deflate.
 app.use(compression({
