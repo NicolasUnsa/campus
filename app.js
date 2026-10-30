@@ -2,6 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const compression = require('compression');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 require('dotenv').config();
 const pool = require('./db');
@@ -15,6 +16,16 @@ const {
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
+// Opciones de la cookie que recuerda el último usuario
+const COOKIE_ULTIMO_USUARIO = {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    signed: true,
+    path: '/',
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 días
+};
+
 // --------------------------------------------------
 // 1. CONFIGURACIÓN BÁSICA
 // --------------------------------------------------
@@ -23,13 +34,16 @@ if (!process.env.SESSION_SECRET) {
 }
 
 // Comprime las respuestas (JSON, HTML, CSS, JS) con gzip/deflate.
-// Debe ir antes de las rutas y de los archivos estáticos.
 app.use(compression({
     threshold: 1024 // solo comprime respuestas mayores a 1 KB
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Lee las cookies del navegador: req.cookies (normales)
+// y req.signedCookies (firmadas con el mismo secreto de la sesión).
+app.use(cookieParser(process.env.SESSION_SECRET));
 
 app.use(session({
     name: 'gestion.sid',
@@ -120,6 +134,14 @@ app.post('/login', validar(loginSchema), async (req, res, next) => {
             };
             req.session.save((errorGuardar) => {
                 if (errorGuardar) return next(errorGuardar);
+
+                // Recordamos solo el nombre de usuario (nunca la contraseña)
+                res.cookie(
+                    'ultimo_usuario',
+                    cuenta.usuario,
+                    COOKIE_ULTIMO_USUARIO
+                );
+
                 return res.status(200).json({
                     message: 'Inicio de sesión correcto.',
                     usuario: {
@@ -135,12 +157,21 @@ app.post('/login', validar(loginSchema), async (req, res, next) => {
 });
 
 // --------------------------------------------------
-// 5. VERIFICAR SESIÓN (GET /api/auth/me)
+// 5. VERIFICAR SESIÓN Y ÚLTIMO USUARIO
 // --------------------------------------------------
 app.get('/api/auth/me', requiereAutenticacion, (req, res) => {
     res.json({
         autenticado: true,
         usuario: req.session.usuario
+    });
+});
+
+// Devuelve el último usuario recordado (cookie firmada).
+// Si la cookie fue alterada, signedCookies la ignora (queda en false).
+app.get('/api/auth/ultimo-usuario', (req, res) => {
+    const ultimo = req.signedCookies?.ultimo_usuario;
+    res.json({
+        usuario: typeof ultimo === 'string' ? ultimo : null
     });
 });
 

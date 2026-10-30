@@ -9,7 +9,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Rellena el campo usuario con el último usuario recordado (cookie firmada)
+    async function cargarUltimoUsuario() {
+        const usuarioInput = document.getElementById('usuario');
+        const passwordInput = document.getElementById('password');
+        if (!usuarioInput) return;
+
+        try {
+            const response = await fetch('/api/auth/ultimo-usuario', {
+                credentials: 'same-origin'
+            });
+            if (!response.ok) return;
+
+            const data = await response.json();
+            if (data.usuario) {
+                usuarioInput.value = data.usuario;
+                if (passwordInput) passwordInput.focus();
+            }
+        } catch (error) {
+            // Si falla, simplemente no se rellena el campo
+        }
+    }
+
     if (formLogin) {
+        cargarUltimoUsuario();
+
         formLogin.addEventListener('submit', async (e) => {
             e.preventDefault();
 
