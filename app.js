@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 require('dotenv').config();
 const corsConfig = require('./middleware/corsConfig');
+const { limiteGeneral, limiteLogin } = require('./middleware/limitadores');
 const pool = require('./db');
 const validar = require('./middleware/validar');
 const {
@@ -36,6 +37,9 @@ if (!process.env.SESSION_SECRET) {
 
 // permite quien puede acceder a nuestra api
 app.use(corsConfig);
+
+// limite general
+app.use('/api', limiteGeneral)
 
 // Comprime las respuestas (JSON, HTML, CSS, JS) con gzip/deflate.
 app.use(compression({
@@ -100,7 +104,7 @@ app.get('/estudiantes.html', requiereAutenticacion, (req, res) => {
 // --------------------------------------------------
 // 4. LOGIN (POST /login)
 // --------------------------------------------------
-app.post('/login', validar(loginSchema), async (req, res, next) => {
+app.post('/login', limiteLogin, validar(loginSchema), async (req, res, next) => {
     try {
         const { usuario, password } = req.body;
 
