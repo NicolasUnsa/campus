@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (formLogin) {
         formLogin.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const usuarioInput = document.getElementById('usuario');
             const passwordInput = document.getElementById('password');
 
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const usuario = usuarioInput.value.trim();
-            const password = passwordInput.value.trim();
+            const password = passwordInput.value;
 
             if (!usuario || !password) {
                 mostrarMensaje('Por favor, complete todos los campos.', 'mensaje-error');
@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                // CORREGIDO: Apunta directamente a '/login' según tus rutas de authRoutes.js
                 const response = await fetch('/login', {
                     method: 'POST',
                     headers: {
@@ -43,7 +42,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json().catch(() => ({}));
 
                 if (!response.ok) {
-                    throw new Error(data.message || data.error || 'Credenciales inválidas.');
+                    throw new Error(
+                        data.errores?.[0]?.mensaje ||
+                        data.message ||
+                        data.error ||
+                        'Credenciales inválidas.'
+                    );
                 }
 
                 // Redireccionar al panel CRUD de estudiantes tras un login exitoso

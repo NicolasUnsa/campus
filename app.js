@@ -4,6 +4,12 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 require('dotenv').config();
 const pool = require('./db');
+const validar = require('./middleware/validar');
+const {
+    loginSchema,
+    estudianteSchema,
+    idParamSchema
+} = require('./schemas/validaciones');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -69,22 +75,9 @@ app.get('/estudiantes.html', requiereAutenticacion, (req, res) => {
 // --------------------------------------------------
 // 4. LOGIN (POST /login)
 // --------------------------------------------------
-app.post('/login', async (req, res, next) => {
+app.post('/login', validar(loginSchema), async (req, res, next) => {
     try {
-        const usuario = String(req.body.usuario || '').trim();
-        const password = req.body.password;
-
-        if (
-            !usuario ||
-            typeof password !== 'string' ||
-            !password ||
-            usuario.length > 100 ||
-            password.length > 72
-        ) {
-            return res.status(400).json({
-                message: 'Ingresa un usuario y contraseña válidos.'
-            });
-        }
+        const { usuario, password } = req.body;
 
         const resultado = await pool.query(
             `SELECT id, usuario, password_hash
@@ -186,133 +179,109 @@ app.get('/api/estudiantes', requiereAutenticacion, async (req, res, next) => {
 });
 
 // GET /api/estudiantes/:id
-app.get('/api/estudiantes/:id', requiereAutenticacion, async (req, res, next) => {
-    try {
-        const id = Number(req.params.id);
-        if (!Number.isSafeInteger(id) || id <= 0) {
-            return res.status(400).json({
-                message: 'El ID debe ser un entero positivo.'
-            });
+app.get(
+    '/api/estudiantes/:id',
+    requiereAutenticacion,
+    validar(idParamSchema, 'params'),
+    async (req, res, next) => {
+        try {
+            const { id } = req.params;
+            const resultado = await pool.query(
+                `SELECT id, nombre, email, carrera, creado_en
+                 FROM estudiantes
+                 WHERE id = $1`,
+                [id]
+            );
+            if (resultado.rows.length === 0) {
+                return res.status(404).json({
+                    message: 'Estudiante no encontrado.'
+                });
+            }
+            res.json(resultado.rows[0]);
+        } catch (error) {
+            next(error);
         }
-        const resultado = await pool.query(
-            `SELECT id, nombre, email, carrera, creado_en
-             FROM estudiantes
-             WHERE id = $1`,
-            [id]
-        );
-        if (resultado.rows.length === 0) {
-            return res.status(404).json({
-                message: 'Estudiante no encontrado.'
-            });
-        }
-        res.json(resultado.rows[0]);
-    } catch (error) {
-        next(error);
     }
-});
+);
 
 // POST /api/estudiantes
-app.post('/api/estudiantes', requiereAutenticacion, async (req, res, next) => {
-    try {
-        const { nombre, email, carrera } = req.body;
-        if (
-            typeof nombre !== 'string' ||
-            typeof email !== 'string' ||
-            typeof carrera !== 'string' ||
-            !nombre.trim() ||
-            !email.trim() ||
-            !carrera.trim() ||
-            nombre.trim().length > 100 ||
-            email.trim().length > 100 ||
-            carrera.trim().length > 80
-        ) {
-            return res.status(400).json({
-                message: 'Verifica los campos obligatorios y sus longitudes.'
-            });
+app.post(
+    '/api/estudiantes',
+    requiereAutenticacion,
+    validar(estudianteSchema),
+    async (req, res, next) => {
+        try {
+            const { nombre, email, carrera } = req.body;
+            const resultado = await pool.query(
+                `INSERT INTO estudiantes (nombre, email, carrera)
+                 VALUES ($1, $2, $3)
+                 RETURNING id, nombre, email, carrera, creado_en`,
+                [nombre, email, carrera]
+            );
+            res.status(201).json(resultado.rows[0]);
+        } catch (error) {
+            next(error);
         }
-        const resultado = await pool.query(
-            `INSERT INTO estudiantes (nombre, email, carrera)
-             VALUES ($1, $2, $3)
-             RETURNING id, nombre, email, carrera, creado_en`,
-            [nombre.trim(), email.trim(), carrera.trim()]
-        );
-        res.status(201).json(resultado.rows[0]);
-    } catch (error) {
-        next(error);
     }
-});
+);
 
 // PUT /api/estudiantes/:id
-app.put('/api/estudiantes/:id', requiereAutenticacion, async (req, res, next) => {
-    try {
-        const id = Number(req.params.id);
-        const { nombre, email, carrera } = req.body;
-        if (!Number.isSafeInteger(id) || id <= 0) {
-            return res.status(400).json({
-                message: 'El ID debe ser un entero positivo.'
-            });
+app.put(
+    '/api/estudiantes/:id',
+    requiereAutenticacion,
+    validar(idParamSchema, 'params'),
+    validar(estudianteSchema),
+    async (req, res, next) => {
+        try {
+            const { id } = req.params;
+            const { nombre, email, carrera } = req.body;
+            const resultado = await pool.query(
+                `UPDATE estudiantes
+                 SET nombre = $1, email = $2, carrera = $3
+                 WHERE id = $4
+                 RETURNING id, nombre, email, carrera, creado_en`,
+                [nombre, email, carrera, id]
+            );
+            if (resultado.rows.length === 0) {
+                return res.status(404).json({
+                    message: 'Estudiante no encontrado.'
+                });
+            }
+            res.json(resultado.rows[0]);
+        } catch (error) {
+            next(error);
         }
-        if (
-            typeof nombre !== 'string' ||
-            typeof email !== 'string' ||
-            typeof carrera !== 'string' ||
-            !nombre.trim() ||
-            !email.trim() ||
-            !carrera.trim() ||
-            nombre.trim().length > 100 ||
-            email.trim().length > 100 ||
-            carrera.trim().length > 80
-        ) {
-            return res.status(400).json({
-                message: 'Verifica los campos obligatorios y sus longitudes.'
-            });
-        }
-        const resultado = await pool.query(
-            `UPDATE estudiantes
-             SET nombre = $1, email = $2, carrera = $3
-             WHERE id = $4
-             RETURNING id, nombre, email, carrera, creado_en`,
-            [nombre.trim(), email.trim(), carrera.trim(), id]
-        );
-        if (resultado.rows.length === 0) {
-            return res.status(404).json({
-                message: 'Estudiante no encontrado.'
-            });
-        }
-        res.json(resultado.rows[0]);
-    } catch (error) {
-        next(error);
     }
-});
+);
 
 // DELETE /api/estudiantes/:id
-app.delete('/api/estudiantes/:id', requiereAutenticacion, async (req, res, next) => {
-    try {
-        const id = Number(req.params.id);
-        if (!Number.isSafeInteger(id) || id <= 0) {
-            return res.status(400).json({
-                message: 'El ID debe ser un entero positivo.'
+app.delete(
+    '/api/estudiantes/:id',
+    requiereAutenticacion,
+    validar(idParamSchema, 'params'),
+    async (req, res, next) => {
+        try {
+            const { id } = req.params;
+            const resultado = await pool.query(
+                `DELETE FROM estudiantes
+                 WHERE id = $1
+                 RETURNING id, nombre, email, carrera`,
+                [id]
+            );
+            if (resultado.rows.length === 0) {
+                return res.status(404).json({
+                    message: 'Estudiante no encontrado.'
+                });
+            }
+            res.json({
+                message: 'Estudiante eliminado correctamente.',
+                estudiante: resultado.rows[0]
             });
+        } catch (error) {
+            next(error);
         }
-        const resultado = await pool.query(
-            `DELETE FROM estudiantes
-             WHERE id = $1
-             RETURNING id, nombre, email, carrera`,
-            [id]
-        );
-        if (resultado.rows.length === 0) {
-            return res.status(404).json({
-                message: 'Estudiante no encontrado.'
-            });
-        }
-        res.json({
-            message: 'Estudiante eliminado correctamente.',
-            estudiante: resultado.rows[0]
-        });
-    } catch (error) {
-        next(error);
     }
-});
+);
 
 // --------------------------------------------------
 // 8. MANEJO CENTRALIZADO DE ERRORES

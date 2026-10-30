@@ -28,7 +28,9 @@ async function solicitar(url, opciones = {}) {
         throw new Error('La sesión ha expirado.');
     }
     if (!response.ok) {
-        throw new Error(data.message || data.error ||
+        // Si zod devolvió errores por campo, mostramos el primero
+        const detalle = data.errores?.[0]?.mensaje;
+        throw new Error(detalle || data.message || data.error ||
             'Error al procesar la solicitud.');
     }
     return data;
@@ -50,11 +52,11 @@ async function cargarEstudiantes() {
         }
         estudiantes.forEach(estudiante => {
             const fila = document.createElement('tr');
-            
+
             [
-                estudiante.id, 
+                estudiante.id,
                 estudiante.nombre,
-                estudiante.email, 
+                estudiante.email,
                 estudiante.carrera
             ].forEach(valor => {
                 const celda = document.createElement('td');
@@ -64,7 +66,7 @@ async function cargarEstudiantes() {
 
             const acciones = document.createElement('td');
             acciones.className = 'acciones';
-            
+
             const editar = document.createElement('button');
             editar.textContent = 'Editar';
             editar.className = 'boton boton-secundario';
@@ -181,6 +183,10 @@ if (btnCerrar) {
 const btnRefresh = document.getElementById('refreshButton');
 if (btnRefresh) {
     btnRefresh.addEventListener('click', cargarEstudiantes);
+}
+
+if (btnCancelar) {
+    btnCancelar.addEventListener('click', limpiarFormulario);
 }
 
 cargarEstudiantes();
