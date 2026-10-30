@@ -7,6 +7,7 @@ const path = require('path');
 require('dotenv').config();
 const corsConfig = require('./middleware/corsConfig');
 const { limiteGeneral, limiteLogin } = require('./middleware/limitadores');
+const logger = require('./middleware/logger');
 const pool = require('./db');
 const validar = require('./middleware/validar');
 const {
@@ -34,6 +35,9 @@ const COOKIE_ULTIMO_USUARIO = {
 if (!process.env.SESSION_SECRET) {
     throw new Error('Falta SESSION_SECRET en el archivo .env');
 }
+
+// anota cada peticion en la terminal (ruta, resultado y tiempo)
+app.use(logger); 
 
 // permite quien puede acceder a nuestra api
 app.use(corsConfig);
