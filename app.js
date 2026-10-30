@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
+const compression = require('compression');
 const path = require('path');
 require('dotenv').config();
 const pool = require('./db');
@@ -20,6 +21,12 @@ const PORT = Number(process.env.PORT) || 3000;
 if (!process.env.SESSION_SECRET) {
     throw new Error('Falta SESSION_SECRET en el archivo .env');
 }
+
+// Comprime las respuestas (JSON, HTML, CSS, JS) con gzip/deflate.
+// Debe ir antes de las rutas y de los archivos estáticos.
+app.use(compression({
+    threshold: 1024 // solo comprime respuestas mayores a 1 KB
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
