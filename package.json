@@ -4,8 +4,12 @@
   "description": "\"# campus\"",
   "main": "index.js",
   "scripts": {
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "engines": {
+  "node": "18.x"
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/NicolasUnsa/campus.git"
