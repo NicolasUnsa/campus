@@ -23,8 +23,8 @@ async function main() {
         const hash = await bcrypt.hash(password, 12);
 
         await pool.query(
-            `INSERT INTO usuarios (usuario, password_hash)
-             VALUES ($1, $2)`,
+            `INSERT INTO usuarios (usuario, password_hash, activo)
+             VALUES ($1, $2, TRUE)`,
             [usuario, hash]
         );
 

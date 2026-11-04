@@ -125,6 +125,29 @@ main.contenedor {
     color: var(--suave);
 }
 
+.texto-alternativo {
+    margin: 20px 0 0;
+    color: var(--suave);
+    text-align: center;
+}
+
+.enlace-acceso {
+    color: var(--granate);
+    font-weight: 700;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+
+.enlace-acceso:hover {
+    color: var(--granate-oscuro);
+}
+
+.enlace-acceso:focus-visible {
+    border-radius: 2px;
+    outline: 2px solid var(--verde);
+    outline-offset: 3px;
+}
+
 .campo {
     margin-bottom: 17px;
 }

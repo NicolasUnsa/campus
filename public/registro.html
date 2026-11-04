@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C.A.M.P.U.S | Crear cuenta</title>
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script src="/js/auth.js" defer></script>
+</head>
+<body>
+    <header class="encabezado">
+        <div class="contenedor">
+            <h1>C.A.M.P.U.S</h1>
+            <p>Sistema de gestión académica</p>
+        </div>
+    </header>
+    <main class="contenedor pagina-acceso">
+        <section class="tarjeta tarjeta-login">
+            <h2>Crear una cuenta</h2>
+            <p class="texto-secundario">
+                Regístrate para acceder a la gestión académica.
+            </p>
+            <form id="formRegistro">
+                <div class="campo">
+                    <label for="nuevoUsuario">Nombre de usuario</label>
+                    <input
+                        type="text"
+                        id="nuevoUsuario"
+                        name="usuario"
+                        autocomplete="username"
+                        maxlength="100"
+                        required
+                    >
+                </div>
+                <div class="campo">
+                    <label for="nuevaPassword">Contraseña</label>
+                    <input
+                        type="password"
+                        id="nuevaPassword"
+                        name="password"
+                        autocomplete="new-password"
+                        minlength="8"
+                        required
+                    >
+                </div>
+                <div class="campo">
+                    <label for="confirmarPassword">Confirmar contraseña</label>
+                    <input
+                        type="password"
+                        id="confirmarPassword"
+                        name="confirmarPassword"
+                        autocomplete="new-password"
+                        minlength="8"
+                        required
+                    >
+                </div>
+                <button type="submit" id="btnRegistro" class="boton boton-principal">
+                    Crear cuenta
+                </button>
+            </form>
+            <p id="mensaje" class="mensaje" role="status" aria-live="polite"></p>
+            <p class="texto-alternativo">
+                ¿Ya tienes cuenta?
+                <a class="enlace-acceso" href="/">Iniciar sesión</a>
+            </p>
+        </section>
+    </main>
+    <footer class="pie">
+        <p>Introducción al Desarrollo Web · 2026</p>
+    </footer>
+</body>
+</html>

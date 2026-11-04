@@ -12,6 +12,7 @@ const pool = require('./db');
 const validar = require('./middleware/validar');
 const {
     loginSchema,
+    registroSchema,
     estudianteSchema,
     idParamSchema
 } = require('./schemas/validaciones');
@@ -32,7 +33,7 @@ const COOKIE_ULTIMO_USUARIO = {
 // 1. CONFIGURACIÓN BÁSICA
 // --------------------------------------------------
 if (!process.env.SESSION_SECRET) {
-    throw new Error('Falta SESSION_SECRET en el archivo .env');
+    throw new Error('Falta SESSION_SECRET en las variables de entorno.');
 }
 
 // anota cada peticion en la terminal (ruta, resultado y tiempo)
@@ -95,6 +96,12 @@ function requiereAutenticacion(req, res, next) {
 app.get('/', (req, res) => {
     res.sendFile(path.join(
         __dirname, 'public', 'index.html'
+    ));
+});
+
+app.get('/registro.html', (req, res) => {
+    res.sendFile(path.join(
+        __dirname, 'public', 'registro.html'
     ));
 });
 
@@ -161,6 +168,26 @@ app.post('/login', limiteLogin, validar(loginSchema), async (req, res, next) => 
                     }
                 });
             });
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.post('/register', limiteLogin, validar(registroSchema), async (req, res, next) => {
+    try {
+        const { usuario, password } = req.body;
+        const passwordHash = await bcrypt.hash(password, 12);
+        const resultado = await pool.query(
+            `INSERT INTO usuarios (usuario, password_hash, activo)
+             VALUES ($1, $2, TRUE)
+             RETURNING id, usuario`,
+            [usuario, passwordHash]
+        );
+
+        res.status(201).json({
+            message: 'Cuenta creada correctamente.',
+            usuario: resultado.rows[0]
         });
     } catch (error) {
         next(error);

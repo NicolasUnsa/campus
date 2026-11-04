@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const formLogin = document.getElementById('formLogin');
+    const formRegistro = document.getElementById('formRegistro');
     const mensajeLogin = document.getElementById('mensaje');
 
     function mostrarMensaje(texto, tipo = '') {
@@ -78,6 +79,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.replace('/estudiantes.html');
             } catch (error) {
                 mostrarMensaje(error.message, 'mensaje-error');
+            }
+        });
+    }
+
+    if (formRegistro) {
+        formRegistro.addEventListener('submit', async event => {
+            event.preventDefault();
+
+            const usuario = document.getElementById('nuevoUsuario').value.trim();
+            const password = document.getElementById('nuevaPassword').value;
+            const confirmarPassword = document.getElementById('confirmarPassword').value;
+            const btnRegistro = document.getElementById('btnRegistro');
+
+            if (password !== confirmarPassword) {
+                mostrarMensaje('Las contraseñas no coinciden.', 'mensaje-error');
+                return;
+            }
+
+            btnRegistro.disabled = true;
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario, password }),
+                    credentials: 'same-origin'
+                });
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.errores?.[0]?.mensaje ||
+                        data.message ||
+                        'No se pudo crear la cuenta.'
+                    );
+                }
+
+                formRegistro.reset();
+                mostrarMensaje('Cuenta creada correctamente. Ya puedes iniciar sesión.', 'mensaje-exito');
+            } catch (error) {
+                mostrarMensaje(error.message, 'mensaje-error');
+            } finally {
+                btnRegistro.disabled = false;
             }
         });
     }

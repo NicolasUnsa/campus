@@ -11,6 +11,11 @@ const loginSchema = z.object({
     password: passwordSchema
 });
 
+const registroSchema = z.object({
+    usuario: z.string().trim().min(1, 'El usuario es obligatorio.').max(100, 'Máximo 100 caracteres.'),
+    password: passwordSchema.min(8, 'La contraseña debe tener al menos 8 caracteres.')
+});
+
 const estudianteSchema = z.object({
     nombre: z.string().trim().min(1, 'El nombre es obligatorio.').max(100, 'Máximo 100 caracteres.'),
     email: z.string().trim().max(100, 'Máximo 100 caracteres.').pipe(z.email('Correo no válido.')),
@@ -21,4 +26,4 @@ const idParamSchema = z.object({
     id: z.coerce.number().int('El ID debe ser un entero.').positive('El ID debe ser positivo.')
 });
 
-module.exports = { loginSchema, estudianteSchema, idParamSchema };
+module.exports = { loginSchema, registroSchema, estudianteSchema, idParamSchema };
