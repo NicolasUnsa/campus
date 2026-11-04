@@ -19,6 +19,7 @@ const {
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+app.set('trust proxy', 1);
 
 // Opciones de la cookie que recuerda el último usuario
 const COOKIE_ULTIMO_USUARIO = {
