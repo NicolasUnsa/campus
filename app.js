@@ -13,7 +13,7 @@ const validar = require('./middleware/validar');
 const {
     loginSchema,
     registroSchema,
-    estudianteSchema,
+    estadoSchema,
     idParamSchema
 } = require('./schemas/validaciones');
 
@@ -82,13 +82,40 @@ app.use('/js', express.static(
 // --------------------------------------------------
 // 2. MIDDLEWARE DE AUTENTICACIÓN
 // --------------------------------------------------
-function requiereAutenticacion(req, res, next) {
-    if (req.session && req.session.usuario) {
-        return next();
+async function requiereAutenticacion(req, res, next) {
+    try {
+        if (!req.session || !req.session.usuario) {
+            return res.status(401).json({
+                message: 'Debe iniciar sesión para continuar.'
+            });
+        }
+
+        const resultado = await pool.query(
+            'SELECT id, usuario, rol, estado FROM usuarios WHERE id = $1',
+            [req.session.usuario.id]
+        );
+        const cuenta = resultado.rows[0];
+
+        if (!cuenta || cuenta.estado !== 'activo') {
+            return req.session.destroy(() => {
+                res.status(401).json({ message: 'Tu cuenta no está activa.' });
+            });
+        }
+
+        req.cuenta = cuenta;
+        next();
+    } catch (error) {
+        next(error);
     }
-    return res.status(401).json({
-        message: 'Debe iniciar sesión para continuar.'
-    });
+}
+
+function requiereAdmin(req, res, next) {
+    if (req.cuenta?.rol !== 'admin') {
+        return res.status(403).json({
+            message: 'Solo los administradores pueden hacer esto.'
+        });
+    }
+    next();
 }
 
 // --------------------------------------------------
@@ -106,9 +133,15 @@ app.get('/registro.html', (req, res) => {
     ));
 });
 
-app.get('/estudiantes.html', requiereAutenticacion, (req, res) => {
+app.get('/inicio.html', requiereAutenticacion, (req, res) => {
     res.sendFile(path.join(
-        __dirname, 'public', 'estudiantes.html'
+        __dirname, 'public', 'inicio.html'
+    ));
+});
+
+app.get('/admin.html', requiereAutenticacion, requiereAdmin, (req, res) => {
+    res.sendFile(path.join(
+        __dirname, 'public', 'admin.html'
     ));
 });
 
@@ -120,52 +153,52 @@ app.post('/login', limiteLogin, validar(loginSchema), async (req, res, next) => 
         const { usuario, password } = req.body;
 
         const resultado = await pool.query(
-            `SELECT id, usuario, password_hash
+            `SELECT id, usuario, contrasena, rol, estado
              FROM usuarios
              WHERE LOWER(usuario) = LOWER($1)
-               AND activo = TRUE`,
+                OR LOWER(correo) = LOWER($1)`,
             [usuario]
         );
 
         if (resultado.rows.length === 0) {
-            return res.status(401).json({
-                message: 'Credenciales incorrectas.'
-            });
+            return res.status(401).json({ message: 'Credenciales incorrectas.' });
         }
 
         const cuenta = resultado.rows[0];
-        const coincide = await bcrypt.compare(
-            password,
-            cuenta.password_hash
-        );
+        const coincide = await bcrypt.compare(password, cuenta.contrasena);
 
         if (!coincide) {
-            return res.status(401).json({
-                message: 'Credenciales incorrectas.'
+            return res.status(401).json({ message: 'Credenciales incorrectas.' });
+        }
+
+        // La contraseña es correcta, ahora revisamos el estado de la cuenta
+        if (cuenta.estado === 'suspendido') {
+            return res.status(403).json({
+                message: 'Tu cuenta está suspendida. Contacta a un administrador.'
             });
+        }
+        if (cuenta.estado !== 'activo') {
+            return res.status(403).json({ message: 'Tu cuenta no está activa.' });
         }
 
         req.session.regenerate((error) => {
             if (error) return next(error);
             req.session.usuario = {
                 id: cuenta.id,
-                usuario: cuenta.usuario
+                usuario: cuenta.usuario,
+                rol: cuenta.rol
             };
             req.session.save((errorGuardar) => {
                 if (errorGuardar) return next(errorGuardar);
 
-                // Recordamos solo el nombre de usuario (nunca la contraseña)
-                res.cookie(
-                    'ultimo_usuario',
-                    cuenta.usuario,
-                    COOKIE_ULTIMO_USUARIO
-                );
+                res.cookie('ultimo_usuario', cuenta.usuario, COOKIE_ULTIMO_USUARIO);
 
                 return res.status(200).json({
                     message: 'Inicio de sesión correcto.',
                     usuario: {
                         id: cuenta.id,
-                        usuario: cuenta.usuario
+                        usuario: cuenta.usuario,
+                        rol: cuenta.rol
                     }
                 });
             });
@@ -177,13 +210,15 @@ app.post('/login', limiteLogin, validar(loginSchema), async (req, res, next) => 
 
 app.post('/register', limiteLogin, validar(registroSchema), async (req, res, next) => {
     try {
-        const { usuario, password } = req.body;
+        const { usuario, correo, password } = req.body;
         const passwordHash = await bcrypt.hash(password, 12);
+
+        // rol = 'usuario' y estado = 'activo' los pone la base de datos por defecto
         const resultado = await pool.query(
-            `INSERT INTO usuarios (usuario, password_hash, activo)
-             VALUES ($1, $2, TRUE)
-             RETURNING id, usuario`,
-            [usuario, passwordHash]
+            `INSERT INTO usuarios (usuario, correo, contrasena)
+             VALUES ($1, $2, $3)
+             RETURNING id, usuario, correo`,
+            [usuario, correo, passwordHash]
         );
 
         res.status(201).json({
@@ -201,7 +236,7 @@ app.post('/register', limiteLogin, validar(registroSchema), async (req, res, nex
 app.get('/api/auth/me', requiereAutenticacion, (req, res) => {
     res.json({
         autenticado: true,
-        usuario: req.session.usuario
+        usuario: req.cuenta
     });
 });
 
@@ -238,15 +273,13 @@ app.post('/logout', (req, res, next) => {
 });
 
 // --------------------------------------------------
-// 7. CRUD DE ESTUDIANTES (Protegidos)
+// ADMINISTRACIÓN DE USUARIOS (solo admin)
 // --------------------------------------------------
-
-// GET /api/estudiantes
-app.get('/api/estudiantes', requiereAutenticacion, async (req, res, next) => {
+app.get('/api/admin/usuarios', requiereAutenticacion, requiereAdmin, async (req, res, next) => {
     try {
         const resultado = await pool.query(
-            `SELECT id, nombre, email, carrera, creado_en
-             FROM estudiantes
+            `SELECT id, usuario, correo, rol, estado, fecha_creacion
+             FROM usuarios
              ORDER BY id`
         );
         res.json(resultado.rows);
@@ -255,24 +288,30 @@ app.get('/api/estudiantes', requiereAutenticacion, async (req, res, next) => {
     }
 });
 
-// GET /api/estudiantes/:id
-app.get(
-    '/api/estudiantes/:id',
+app.patch(
+    '/api/admin/usuarios/:id/estado',
     requiereAutenticacion,
+    requiereAdmin,
     validar(idParamSchema, 'params'),
+    validar(estadoSchema),
     async (req, res, next) => {
         try {
             const { id } = req.params;
+            const { estado } = req.body;
+
+            if (id === req.cuenta.id) {
+                return res.status(400).json({
+                    message: 'No puedes cambiar el estado de tu propia cuenta.'
+                });
+            }
+
             const resultado = await pool.query(
-                `SELECT id, nombre, email, carrera, creado_en
-                 FROM estudiantes
-                 WHERE id = $1`,
-                [id]
+                `UPDATE usuarios SET estado = $1 WHERE id = $2
+                 RETURNING id, usuario, correo, rol, estado`,
+                [estado, id]
             );
             if (resultado.rows.length === 0) {
-                return res.status(404).json({
-                    message: 'Estudiante no encontrado.'
-                });
+                return res.status(404).json({ message: 'Usuario no encontrado.' });
             }
             res.json(resultado.rows[0]);
         } catch (error) {
@@ -281,79 +320,29 @@ app.get(
     }
 );
 
-// POST /api/estudiantes
-app.post(
-    '/api/estudiantes',
-    requiereAutenticacion,
-    validar(estudianteSchema),
-    async (req, res, next) => {
-        try {
-            const { nombre, email, carrera } = req.body;
-            const resultado = await pool.query(
-                `INSERT INTO estudiantes (nombre, email, carrera)
-                 VALUES ($1, $2, $3)
-                 RETURNING id, nombre, email, carrera, creado_en`,
-                [nombre, email, carrera]
-            );
-            res.status(201).json(resultado.rows[0]);
-        } catch (error) {
-            next(error);
-        }
-    }
-);
-
-// PUT /api/estudiantes/:id
-app.put(
-    '/api/estudiantes/:id',
-    requiereAutenticacion,
-    validar(idParamSchema, 'params'),
-    validar(estudianteSchema),
-    async (req, res, next) => {
-        try {
-            const { id } = req.params;
-            const { nombre, email, carrera } = req.body;
-            const resultado = await pool.query(
-                `UPDATE estudiantes
-                 SET nombre = $1, email = $2, carrera = $3
-                 WHERE id = $4
-                 RETURNING id, nombre, email, carrera, creado_en`,
-                [nombre, email, carrera, id]
-            );
-            if (resultado.rows.length === 0) {
-                return res.status(404).json({
-                    message: 'Estudiante no encontrado.'
-                });
-            }
-            res.json(resultado.rows[0]);
-        } catch (error) {
-            next(error);
-        }
-    }
-);
-
-// DELETE /api/estudiantes/:id
 app.delete(
-    '/api/estudiantes/:id',
+    '/api/admin/usuarios/:id',
     requiereAutenticacion,
+    requiereAdmin,
     validar(idParamSchema, 'params'),
     async (req, res, next) => {
         try {
             const { id } = req.params;
+
+            if (id === req.cuenta.id) {
+                return res.status(400).json({
+                    message: 'No puedes eliminar tu propia cuenta.'
+                });
+            }
+
             const resultado = await pool.query(
-                `DELETE FROM estudiantes
-                 WHERE id = $1
-                 RETURNING id, nombre, email, carrera`,
+                'DELETE FROM usuarios WHERE id = $1 RETURNING id, usuario',
                 [id]
             );
             if (resultado.rows.length === 0) {
-                return res.status(404).json({
-                    message: 'Estudiante no encontrado.'
-                });
+                return res.status(404).json({ message: 'Usuario no encontrado.' });
             }
-            res.json({
-                message: 'Estudiante eliminado correctamente.',
-                estudiante: resultado.rows[0]
-            });
+            res.json({ message: 'Usuario eliminado correctamente.' });
         } catch (error) {
             next(error);
         }

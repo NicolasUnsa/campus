@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración | C.A.M.P.U.S</title>
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script src="/js/admin.js" defer></script>
+</head>
+<body>
+    <header class="encabezado">
+        <div class="contenedor">
+            <h1>Panel de administración</h1>
+            <p>Gestión de cuentas de usuario</p>
+        </div>
+    </header>
+    <main class="contenedor">
+        <section class="tarjeta">
+            <div class="barra-superior">
+                <h2>Usuarios registrados</h2>
+                <a class="boton boton-secundario" href="/inicio.html" style="text-decoration: none; display: inline-block;">← Volver al inicio</a>
+                <button id="btnCerrarSesion" class="boton boton-secundario">Cerrar sesión</button>
+            </div>
+            <p id="mensaje" class="mensaje" role="status" aria-live="polite"></p>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuario</th>
+                            <th>Correo</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Creado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaUsuarios">
+                        <tr><td colspan="7">Cargando usuarios...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

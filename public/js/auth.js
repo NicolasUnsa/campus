@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Redireccionar al panel CRUD de estudiantes tras un login exitoso
-                window.location.replace('/estudiantes.html');
+                window.location.replace('/inicio.html');
             } catch (error) {
                 mostrarMensaje(error.message, 'mensaje-error');
             }
@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
 
             const usuario = document.getElementById('nuevoUsuario').value.trim();
+            const correo = document.getElementById('nuevoCorreo').value.trim();
             const password = document.getElementById('nuevaPassword').value;
             const confirmarPassword = document.getElementById('confirmarPassword').value;
             const btnRegistro = document.getElementById('btnRegistro');
@@ -102,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch('/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario, password }),
+                    body: JSON.stringify({ usuario, correo, password, confirmarPassword }),
                     credentials: 'same-origin'
                 });
                 const data = await response.json().catch(() => ({}));

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio | C.A.M.P.U.S</title>
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script src="/js/inicio.js" defer></script>
+</head>
+<body>
+    <header class="encabezado">
+        <div class="contenedor">
+            <h1>C.A.M.P.U.S</h1>
+            <p>Bienvenido a la plataforma</p>
+        </div>
+    </header>
+    <main class="contenedor">
+        <section class="tarjeta">
+            <div class="barra-superior">
+                <h2 id="saludo">Hola</h2>
+                <button id="btnCerrarSesion" class="boton boton-secundario">Cerrar sesión</button>
+            </div>
+            <p id="mensaje" class="mensaje" role="status" aria-live="polite"></p>
+            <p class="texto-secundario">
+                Aquí irá todo el contenido principal nuestra página
+            </p>
+        </section>
+
+        <!-- Solo se muestra si el usuario es admin -->
+        <section id="panelAdmin" class="tarjeta" style="display: none;">
+            <h2>Administración</h2>
+            <p class="texto-secundario">
+                Activa, suspende o elimina cuentas de otros usuarios.
+            </p>
+            <a class="boton boton-principal" href="/admin.html"
+               style="text-decoration: none; display: inline-block;">
+                Gestionar cuentas
+            </a>
+        </section>
+    </main>
+    <footer class="pie">
+        <p>C.A.M.P.U.S · 2026</p>
+    </footer>
+</body>
+</html>
