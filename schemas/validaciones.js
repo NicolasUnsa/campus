@@ -1,5 +1,10 @@
 const { z } = require('zod');
 
+const { limpiar } = require('../utils/sanitizar');
+
+const textoSeguro = (min, max) =>
+    z.string().trim().min(min).max(max).transform(limpiar);
+
 // bcrypt solo usa los primeros 72 bytes
 const passwordSchema = z
     .string()
@@ -33,4 +38,4 @@ const idParamSchema = z.object({
     id: z.coerce.number().int('El ID debe ser un entero.').positive('El ID debe ser positivo.')
 });
 
-module.exports = { loginSchema, registroSchema, estadoSchema, idParamSchema };
+module.exports = { loginSchema, registroSchema, estadoSchema, idParamSchema, textoSeguro };
