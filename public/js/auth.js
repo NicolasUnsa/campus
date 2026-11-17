@@ -91,6 +91,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const correo = document.getElementById('nuevoCorreo').value.trim();
             const password = document.getElementById('nuevaPassword').value;
             const confirmarPassword = document.getElementById('confirmarPassword').value;
+            const nombres = document.getElementById('nuevosNombres').value.trim();
+            const apellidos = document.getElementById('nuevosApellidos').value.trim();
+            const cui = document.getElementById('nuevoCui').value.trim();
+            const carrera = document.getElementById('nuevaCarrera').value;
             const btnRegistro = document.getElementById('btnRegistro');
 
             if (password !== confirmarPassword) {
@@ -103,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch('/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario, correo, password, confirmarPassword }),
+                    body: JSON.stringify({nombres, apellidos, cui, carrera, usuario, correo, password, confirmarPassword }),
                     credentials: 'same-origin'
                 });
                 const data = await response.json().catch(() => ({}));

@@ -210,15 +210,16 @@ app.post('/login', limiteLogin, validar(loginSchema), async (req, res, next) => 
 
 app.post('/register', limiteLogin, validar(registroSchema), async (req, res, next) => {
     try {
-        const { usuario, correo, password } = req.body;
+        const { nombres, apellidos, cui, carrera, usuario, correo, password } = req.body;
         const passwordHash = await bcrypt.hash(password, 12);
 
         // rol = 'usuario' y estado = 'activo' los pone la base de datos por defecto
         const resultado = await pool.query(
-            `INSERT INTO usuarios (usuario, correo, contrasena)
-             VALUES ($1, $2, $3)
+            `INSERT INTO usuarios
+             (usuario, correo, contrasena, nombres, apellidos, cui, carrera)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING id, usuario, correo`,
-            [usuario, correo, passwordHash]
+            [usuario, correo, passwordHash, nombres, apellidos, cui, carrera]
         );
 
         res.status(201).json({
@@ -358,9 +359,10 @@ app.use((error, req, res, next) => {
         return next(error);
     }
     if (error.code === '23505') {
-        return res.status(409).json({
-            message: 'Ya existe un registro con ese usuario o correo.'
-        });
+        const mensaje = error.constraint?.includes('cui')
+            ? 'Ese CUI ya está registrado.'
+            : 'Ya existe un registro con ese usuario o correo.';
+        return res.status(409).json({ message: mensaje });
     }
     return res.status(500).json({
         message: 'Ocurrió un error interno del servidor.'

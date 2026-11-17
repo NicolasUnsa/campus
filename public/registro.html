@@ -21,49 +21,103 @@
                 Regístrate para acceder a la gestión académica.
             </p>
             <form id="formRegistro">
+                                <div class="campo">
+                    <label for="nuevosNombres">Nombres</label>
+                    <input type="text" id="nuevosNombres" name="nombres" autocomplete="given-name" maxlength="80" required>
+                </div>
+                <div class="campo">
+                    <label for="nuevosApellidos">Apellidos</label>
+                    <input type="text" id="nuevosApellidos" name="apellidos" autocomplete="family-name" maxlength="80" required>
+                </div>
+                <div class="campo">
+                    <label for="nuevoCui">CUI</label>
+                    <input type="text" id="nuevoCui" name="cui" inputmode="numeric" maxlength="10" required>
+                </div>
+                <div class="campo">
+                    <label for="nuevaCarrera">Carrera</label>
+                    <select id="nuevaCarrera" name="carrera" required>
+                        <option value="">Selecciona tu carrera</option>
+                        <optgroup label="Área de Ingenierías">
+                            <option value="Agronomía">Agronomía</option>
+                            <option value="Arquitectura">Arquitectura</option>
+                            <option value="Ciencia de la Computación">Ciencia de la Computación</option>
+                            <option value="Física">Física</option>
+                            <option value="Ingeniería Ambiental">Ingeniería Ambiental</option>
+                            <option value="Ingeniería Civil">Ingeniería Civil</option>
+                            <option value="Ingeniería de Industrias Alimentarias">Ingeniería de Industrias Alimentarias</option>
+                            <option value="Ingeniería de Materiales">Ingeniería de Materiales</option>
+                            <option value="Ingeniería de Minas">Ingeniería de Minas</option>
+                            <option value="Ingeniería de Sistemas">Ingeniería de Sistemas</option>
+                            <option value="Ingeniería de Telecomunicaciones">Ingeniería de Telecomunicaciones</option>
+                            <option value="Ingeniería Eléctrica">Ingeniería Eléctrica</option>
+                            <option value="Ingeniería Electrónica">Ingeniería Electrónica</option>
+                            <option value="Ingeniería Geofísica">Ingeniería Geofísica</option>
+                            <option value="Ingeniería Geológica">Ingeniería Geológica</option>
+                            <option value="Ingeniería Industrial">Ingeniería Industrial</option>
+                            <option value="Ingeniería Mecánica">Ingeniería Mecánica</option>
+                            <option value="Ingeniería Metalúrgica">Ingeniería Metalúrgica</option>
+                            <option value="Ingeniería Pesquera">Ingeniería Pesquera</option>
+                            <option value="Ingeniería Química">Ingeniería Química</option>
+                            <option value="Ingeniería Sanitaria">Ingeniería Sanitaria</option>
+                            <option value="Matemáticas">Matemáticas</option>
+                            <option value="Química">Química</option>
+                        </optgroup>
+                        <optgroup label="Área de Biomédicas">
+                            <option value="Biología">Biología</option>
+                            <option value="Ciencias de la Nutrición">Ciencias de la Nutrición</option>
+                            <option value="Enfermería">Enfermería</option>
+                            <option value="Medicina">Medicina</option>
+                        </optgroup>
+                        <optgroup label="Área de Ciencias Sociales">
+                            <option value="Administración">Administración</option>
+                            <option value="Antropología">Antropología</option>
+                            <option value="Artes - Especialidad Música">Artes - Especialidad Música</option>
+                            <option value="Artes - Especialidad Plásticas">Artes - Especialidad Plásticas</option>
+                            <option value="Banca y Seguros">Banca y Seguros</option>
+                            <option value="Ciencias de la Comunicación - Periodismo">Ciencias de la Comunicación - Periodismo</option>
+                            <option value="Ciencias de la Comunicación - Relaciones Públicas">Ciencias de la Comunicación - Relaciones Públicas</option>
+                            <option value="Contabilidad">Contabilidad</option>
+                            <option value="Derecho">Derecho</option>
+                            <option value="Economía">Economía</option>
+                            <option value="Educación - Ciencias Naturales">Educación - Ciencias Naturales</option>
+                            <option value="Educación - Ciencias Sociales">Educación - Ciencias Sociales</option>
+                            <option value="Educación - Educación Física">Educación - Educación Física</option>
+                            <option value="Educación - Educación Inicial">Educación - Educación Inicial</option>
+                            <option value="Educación - Educación Primaria">Educación - Educación Primaria</option>
+                            <option value="Educación - Físico Matemática">Educación - Físico Matemática</option>
+                            <option value="Educación - Idiomas (Inglés - Francés)">Educación - Idiomas (Inglés - Francés)</option>
+                            <option value="Educación - Informática Educativa">Educación - Informática Educativa</option>
+                            <option value="Educación - Lengua, Literatura, Filosofía y Psicología">Educación - Lengua, Literatura, Filosofía y Psicología</option>
+                            <option value="Filosofía">Filosofía</option>
+                            <option value="Finanzas">Finanzas</option>
+                            <option value="Gestión - Gestión de Empresas">Gestión - Gestión de Empresas</option>
+                            <option value="Gestión - Gestión Pública">Gestión - Gestión Pública</option>
+                            <option value="Historia">Historia</option>
+                            <option value="Literatura y Lingüística">Literatura y Lingüística</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Psicología">Psicología</option>
+                            <option value="Relaciones Industriales">Relaciones Industriales</option>
+                            <option value="Sociología">Sociología</option>
+                            <option value="Trabajo Social">Trabajo Social</option>
+                            <option value="Turismo y Hotelería">Turismo y Hotelería</option>
+                        </optgroup>
+                    </select>
+                </div>
                 <div class="campo">
                     <label for="nuevoUsuario">Nombre de usuario</label>
-                    <input
-                        type="text"
-                        id="nuevoUsuario"
-                        name="usuario"
-                        autocomplete="username"
-                        maxlength="100"
-                        required
-                    >
+                    <input type="text" id="nuevoUsuario" name="usuario" autocomplete="username" maxlength="100" required>
                 </div>
                 <div class="campo">
                     <label for="nuevoCorreo">Correo electrónico</label>
-                    <input
-                        type="email"
-                        id="nuevoCorreo"
-                        name="correo"
-                        autocomplete="email"
-                        maxlength="100"
-                        required
-                    >
+                    <input type="email" id="nuevoCorreo" name="correo" autocomplete="email" maxlength="100" required>
                 </div>
                 <div class="campo">
                     <label for="nuevaPassword">Contraseña</label>
-                    <input
-                        type="password"
-                        id="nuevaPassword"
-                        name="password"
-                        autocomplete="new-password"
-                        minlength="8"
-                        required
-                    >
+                    <input type="password" id="nuevaPassword" name="password" autocomplete="new-password"  minlength="8" required>
                 </div>
                 <div class="campo">
                     <label for="confirmarPassword">Confirmar contraseña</label>
-                    <input
-                        type="password"
-                        id="confirmarPassword"
-                        name="confirmarPassword"
-                        autocomplete="new-password"
-                        minlength="8"
-                        required
-                    >
+                    <input type="password" id="confirmarPassword" name="confirmarPassword" autocomplete="new-password" minlength="8" required>
                 </div>
                 <button type="submit" id="btnRegistro" class="boton boton-principal">
                     Crear cuenta
