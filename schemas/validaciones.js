@@ -60,4 +60,54 @@ const idParamSchema = z.object({
     id: z.coerce.number().int('El ID debe ser un entero.').positive('El ID debe ser positivo.')
 });
 
-module.exports = { loginSchema, registroSchema, estadoSchema, idParamSchema, textoSeguro };
+// BIBLIOTECA
+const libroSchema = z.object({
+    titulo: textoSeguro(1, 200),
+    autor: textoSeguro(1, 150),
+    isbn: z.string().trim().max(20).optional(),
+    categoria: textoSeguro(1, 80).optional()
+});
+
+const ejemplarSchema = z.object({
+    libro_id: z.coerce.number().int().positive(),
+    codigo: z.string().trim().min(1, 'El código es obligatorio.').max(50)
+});
+
+const libroIdSchema = z.object({
+    libro_id: z.coerce.number().int().positive()
+});
+
+// ECONOMIA CIRCULAR
+const publicacionSchema = z.object({
+    titulo: textoSeguro(3, 150),
+    descripcion: textoSeguro(0, 1000).optional(),
+    categoria: textoSeguro(1, 80).optional(),
+    tipo: z.enum(['venta', 'intercambio', 'donacion'], 'Tipo no válido.'),
+    precio: z.coerce.number().nonnegative().max(99999).optional(),
+    condicion: z.enum(['nuevo', 'bueno', 'usado']).optional()
+}).refine(d => d.tipo !== 'venta' || d.precio !== undefined, {
+    message: 'Una venta necesita precio.',
+    path: ['precio']
+});
+
+const solicitudSchema = z.object({
+    mensaje: textoSeguro(0, 500).optional()
+});
+
+const respuestaSchema = z.object({
+    estado: z.enum(['aceptada', 'rechazada'], 'Estado no válido.')
+});
+
+const reporteSchema = z.object({
+    motivo: textoSeguro(5, 500)
+});
+
+const calificacionSchema = z.object({
+    puntaje: z.coerce.number().int().min(1, 'Mínimo 1.').max(5, 'Máximo 5.'),
+    comentario: textoSeguro(0, 300).optional()
+});
+
+module.exports = {loginSchema, registroSchema, estadoSchema, idParamSchema, textoSeguro,
+    libroSchema, ejemplarSchema, libroIdSchema, publicacionSchema, 
+    solicitudSchema, respuestaSchema, reporteSchema, calificacionSchema
+};

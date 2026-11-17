@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rota Recursos | C.A.M.P.U.S</title>
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script src="/js/comun.js" defer></script>
+    <script src="/js/circular.js" defer></script>
+</head>
+<body>
+    <header class="encabezado">
+        <div class="contenedor">
+            <h1>Rota Recursos</h1>
+            <p>Vende, intercambia o dona tus materiales</p>
+        </div>
+    </header>
+
+    <main class="contenedor">
+        <section class="tarjeta">
+            <div class="barra-superior">
+                <h2>Materiales disponibles</h2>
+                <a class="boton boton-secundario" href="/inicio.html">← Volver al inicio</a>
+                <button id="btnCerrarSesion" class="boton boton-secundario">Cerrar sesión</button>
+            </div>
+            <p id="mensaje" class="mensaje" role="status" aria-live="polite"></p>
+
+            <div class="herramientas">
+                <div class="campo">
+                    <label for="buscarPub">Buscar</label>
+                    <input type="text" id="buscarPub" placeholder="Ej: Física, apuntes...">
+                </div>
+                <div class="campo">
+                    <label for="filtroTipo">Tipo</label>
+                    <select id="filtroTipo">
+                        <option value="">Todos</option>
+                        <option value="venta">Venta</option>
+                        <option value="intercambio">Intercambio</option>
+                        <option value="donacion">Donación</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="listaPublicaciones" class="rejilla">
+                <p class="texto-secundario">Cargando materiales...</p>
+            </div>
+        </section>
+
+        <section class="tarjeta">
+            <h2>Publicar un material</h2>
+            <p class="texto-secundario">Libros, apuntes, calculadoras o cualquier material que ya no uses.</p>
+            <form id="formPublicacion">
+                <div class="rejilla-form">
+                    <div class="campo">
+                        <label for="pubTitulo">Título</label>
+                        <input type="text" id="pubTitulo" required minlength="3" maxlength="150">
+                    </div>
+                    <div class="campo">
+                        <label for="pubCategoria">Categoría (opcional)</label>
+                        <input type="text" id="pubCategoria" maxlength="80" placeholder="Ej: Matemática">
+                    </div>
+                    <div class="campo">
+                        <label for="pubTipo">Tipo</label>
+                        <select id="pubTipo">
+                            <option value="venta">Venta</option>
+                            <option value="intercambio">Intercambio</option>
+                            <option value="donacion">Donación</option>
+                        </select>
+                    </div>
+                    <div class="campo" id="campoPrecio">
+                        <label for="pubPrecio">Precio (S/)</label>
+                        <input type="number" id="pubPrecio" min="0" step="0.5">
+                    </div>
+                    <div class="campo">
+                        <label for="pubCondicion">Condición</label>
+                        <select id="pubCondicion">
+                            <option value="">Sin especificar</option>
+                            <option value="nuevo">Nuevo</option>
+                            <option value="bueno">Bueno</option>
+                            <option value="usado">Usado</option>
+                        </select>
+                    </div>
+                    <div class="campo campo-ancho">
+                        <label for="pubDescripcion">Descripción (opcional)</label>
+                        <textarea id="pubDescripcion" maxlength="1000"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="boton">Publicar</button>
+            </form>
+        </section>
+
+        <section class="tarjeta">
+            <h2>Mis publicaciones</h2>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Tipo</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaMias">
+                        <tr><td colspan="5">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="tarjeta">
+            <h2>Solicitudes recibidas</h2>
+            <p class="texto-secundario">Personas que quieren tus materiales.</p>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th>Solicitante</th>
+                            <th>Mensaje</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaRecibidas">
+                        <tr><td colspan="5">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="tarjeta">
+            <h2>Mis solicitudes</h2>
+            <p class="texto-secundario">Materiales que pediste a otros estudiantes.</p>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th>Publicado por</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaEnviadas">
+                        <tr><td colspan="5">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="panelAdmin" class="tarjeta" hidden>
+            <h2>Moderación</h2>
+            <p class="texto-secundario">Reportes abiertos de publicaciones.</p>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Publicación</th>
+                            <th>Reportado por</th>
+                            <th>Motivo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaReportes">
+                        <tr><td colspan="4">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer class="pie">
+        <p>C.A.M.P.U.S · 2026</p>
+    </footer>
+</body>
+</html>

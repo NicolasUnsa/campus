@@ -314,3 +314,127 @@ td:last-child .boton {
   .barra-superior { flex-direction: column; align-items: stretch; }
   .barra-superior .boton { width: 100%; }
 }
+
+select,
+textarea {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--borde);
+  border-radius: 8px;
+  background: var(--campo);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.95rem;
+  transition: var(--transicion);
+}
+
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--rojo);
+  box-shadow: 0 0 0 3px var(--rojo-suave);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.rejilla-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0 1rem;
+}
+
+.rejilla-form .campo-ancho {
+  grid-column: 1 / -1;
+}
+
+.subtitulo {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 1.75rem 0 0.75rem;
+}
+
+.accesos {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Tablas cuya última columna NO son botones */
+.tabla-simple td:last-child {
+  display: table-cell;
+}
+
+/* ===== Tarjetas de publicaciones ===== */
+.herramientas {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.herramientas > * {
+  flex: 1 1 200px;
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.publicacion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  border: 2px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--tarjeta);
+}
+
+.publicacion h3 {
+  font-size: 1.05rem;
+}
+
+.publicacion .precio {
+  color: var(--rojo);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.publicacion .detalle {
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+}
+
+.publicacion .acciones {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+.publicacion .acciones .boton {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.82rem;
+}
+
+.etiqueta {
+  align-self: flex-start;
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: #eeeeee;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.etiqueta-venta { background: var(--rojo-suave); color: var(--rojo); }
+.etiqueta-intercambio { background: #e0f2fe; color: #075985; }
+.etiqueta-donacion { background: #d1fae5; color: var(--exito); }

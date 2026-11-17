@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca | C.A.M.P.U.S</title>
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script src="/js/comun.js" defer></script>
+    <script src="/js/biblioteca.js" defer></script>
+</head>
+<body>
+    <header class="encabezado">
+        <div class="contenedor">
+            <h1>Biblioteca</h1>
+            <p>Catálogo, préstamos y reservas</p>
+        </div>
+    </header>
+
+    <main class="contenedor">
+        <!-- CATÁLOGO -->
+        <section class="tarjeta">
+            <div class="barra-superior">
+                <h2>Catálogo de libros</h2>
+                <a class="boton boton-secundario" href="/inicio.html">← Volver al inicio</a>
+                <button id="btnCerrarSesion" class="boton boton-secundario">Cerrar sesión</button>
+            </div>
+            <p id="mensaje" class="mensaje" role="status" aria-live="polite"></p>
+
+            <div class="campo">
+                <label for="buscarLibro">Buscar por título, autor o categoría</label>
+                <input type="text" id="buscarLibro" placeholder="Ej: Cálculo">
+            </div>
+
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Autor</th>
+                            <th>Categoría</th>
+                            <th>Disponibles</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaCatalogo">
+                        <tr><td colspan="5">Cargando catálogo...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- MIS PRÉSTAMOS -->
+        <section class="tarjeta">
+            <h2>Mis préstamos</h2>
+            <p class="texto-secundario">Máximo 3 préstamos activos, de 7 días cada uno.</p>
+            <div class="tabla-contenedor">
+                <table class="tabla-simple">
+                    <thead>
+                        <tr>
+                            <th>Libro</th>
+                            <th>Prestado</th>
+                            <th>Vence</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaPrestamos">
+                        <tr><td colspan="4">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="tarjeta">
+            <h2>Mis reservas</h2>
+            <p class="texto-secundario">Reserva un libro cuando no tenga copias disponibles.</p>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Libro</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaReservas">
+                        <tr><td colspan="4">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="panelAdmin" class="tarjeta" hidden>
+            <h2>Administración de la biblioteca</h2>
+
+            <h3 class="subtitulo">Agregar libro al catálogo</h3>
+            <form id="formLibro">
+                <div class="rejilla-form">
+                    <div class="campo">
+                        <label for="libroTitulo">Título</label>
+                        <input type="text" id="libroTitulo" required maxlength="200">
+                    </div>
+                    <div class="campo">
+                        <label for="libroAutor">Autor</label>
+                        <input type="text" id="libroAutor" required maxlength="150">
+                    </div>
+                    <div class="campo">
+                        <label for="libroIsbn">ISBN (opcional)</label>
+                        <input type="text" id="libroIsbn" maxlength="20">
+                    </div>
+                    <div class="campo">
+                        <label for="libroCategoria">Categoría (opcional)</label>
+                        <input type="text" id="libroCategoria" maxlength="80">
+                    </div>
+                </div>
+                <button type="submit" class="boton">Agregar libro</button>
+            </form>
+
+            <h3 class="subtitulo">Registrar una copia física</h3>
+            <form id="formEjemplar">
+                <div class="rejilla-form">
+                    <div class="campo">
+                        <label for="ejemplarLibro">Libro</label>
+                        <select id="ejemplarLibro" required></select>
+                    </div>
+                    <div class="campo">
+                        <label for="ejemplarCodigo">Código de la copia</label>
+                        <input type="text" id="ejemplarCodigo" required maxlength="50" placeholder="Ej: CAL-003">
+                    </div>
+                </div>
+                <button type="submit" class="boton">Registrar copia</button>
+            </form>
+
+            <h3 class="subtitulo">Préstamos sin devolver</h3>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Libro</th>
+                            <th>Código</th>
+                            <th>Vence</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaPrestamosAdmin">
+                        <tr><td colspan="6">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer class="pie">
+        <p>C.A.M.P.U.S · 2026</p>
+    </footer>
+</body>
+</html>
