@@ -10,6 +10,7 @@ const { limiteGeneral, limiteLogin } = require('./middleware/limitadores');
 const logger = require('./middleware/logger');
 const pool = require('./db');
 const validar = require('./middleware/validar');
+const { requiereAutenticacion, requiereAdmin } = require('./middleware/auth');
 const {
     loginSchema,
     registroSchema,
@@ -80,45 +81,6 @@ app.use('/js', express.static(
 ));
 
 // --------------------------------------------------
-// 2. MIDDLEWARE DE AUTENTICACIÓN
-// --------------------------------------------------
-async function requiereAutenticacion(req, res, next) {
-    try {
-        if (!req.session || !req.session.usuario) {
-            return res.status(401).json({
-                message: 'Debe iniciar sesión para continuar.'
-            });
-        }
-
-        const resultado = await pool.query(
-            'SELECT id, usuario, rol, estado FROM usuarios WHERE id = $1',
-            [req.session.usuario.id]
-        );
-        const cuenta = resultado.rows[0];
-
-        if (!cuenta || cuenta.estado !== 'activo') {
-            return req.session.destroy(() => {
-                res.status(401).json({ message: 'Tu cuenta no está activa.' });
-            });
-        }
-
-        req.cuenta = cuenta;
-        next();
-    } catch (error) {
-        next(error);
-    }
-}
-
-function requiereAdmin(req, res, next) {
-    if (req.cuenta?.rol !== 'admin') {
-        return res.status(403).json({
-            message: 'Solo los administradores pueden hacer esto.'
-        });
-    }
-    next();
-}
-
-// --------------------------------------------------
 // 3. PÁGINAS WEB
 // --------------------------------------------------
 app.get('/', (req, res) => {
@@ -142,6 +104,18 @@ app.get('/inicio.html', requiereAutenticacion, (req, res) => {
 app.get('/admin.html', requiereAutenticacion, requiereAdmin, (req, res) => {
     res.sendFile(path.join(
         __dirname, 'public', 'admin.html'
+    ));
+});
+
+app.get('/biblioteca.html', requiereAutenticacion, (req, res) => {
+    res.sendFile(path.join(
+        __dirname, 'public', 'biblioteca.html'
+    ));
+});
+
+app.get('/circular.html', requiereAutenticacion, (req, res) => {
+    res.sendFile(path.join(
+        __dirname, 'public', 'circular.html'
     ));
 });
 
@@ -350,6 +324,11 @@ app.delete(
     }
 );
 
+
+// SERVICIOS (cada uno con su propio router)
+app.use('/api/biblioteca', require('./routes/biblioteca'));
+app.use('/api/circular', require('./routes/circular'));
+
 // --------------------------------------------------
 // 8. MANEJO CENTRALIZADO DE ERRORES
 // --------------------------------------------------
@@ -359,10 +338,19 @@ app.use((error, req, res, next) => {
         return next(error);
     }
     if (error.code === '23505') {
-        const mensaje = error.constraint?.includes('cui')
-            ? 'Ese CUI ya está registrado.'
-            : 'Ya existe un registro con ese usuario o correo.';
+        let mensaje = 'Ya existe un registro con esos datos.';
+        if (error.constraint?.includes('cui')) {
+            mensaje = 'Ese CUI ya está registrado.';
+        } else if (error.table === 'usuarios') {
+            mensaje = 'Ya existe un registro con ese usuario o correo.';
+        }
         return res.status(409).json({ message: mensaje });
+    }
+    
+    if (error.code === '23503') {
+        return res.status(409).json({
+            message: 'No se puede completar: hay datos relacionados que lo impiden (por ejemplo, préstamos registrados).'
+        });
     }
     return res.status(500).json({
         message: 'Ocurrió un error interno del servidor.'

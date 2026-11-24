@@ -9,6 +9,6 @@ const config = (limit, message) => rateLimit({
 });
 
 module.exports = {
-    limiteGeneral: config(100, 'Demasiadas peticiones.'),         
+    limiteGeneral: config(300, 'Demasiadas peticiones.'),         
     limiteLogin: config(10, 'Demasiados intentos. Espera 15 minutos.') 
 };
